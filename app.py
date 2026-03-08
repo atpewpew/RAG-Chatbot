@@ -63,16 +63,27 @@ def main():
         accept_multiple_files=True
     )
     
-    global documents
+    # Track already-indexed files to prevent duplicate indexing on Streamlit reruns
+    if "processed_files" not in st.session_state:
+        st.session_state.processed_files = set()
 
     if uploaded_files:
+        os.makedirs("temp", exist_ok=True)
+        new_files = 0
         for uploaded_file in uploaded_files:
+            if uploaded_file.name in st.session_state.processed_files:
+                continue
             file_path = f"temp/{uploaded_file.name}"
             with open(file_path, "wb") as f:
                 f.write(uploaded_file.read())
             load_documents(file_path)
-        add_documents_to_index()
-        st.sidebar.success(f"{len(uploaded_files)} file(s) processed and added to the index!")
+            st.session_state.processed_files.add(uploaded_file.name)
+            new_files += 1
+        if new_files > 0:
+            add_documents_to_index()
+            st.sidebar.success(f"{new_files} new file(s) processed and added to the index!")
+        else:
+            st.sidebar.info("All uploaded files are already indexed.")
 
     # Initialize chat history
     if "history" not in st.session_state:

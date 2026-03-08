@@ -1,0 +1,25 @@
+# Never bake the API key into the image
+.env
+
+# Uploaded documents (mounted at runtime, not baked in)
+temp/
+
+# Git history
+.git/
+.gitignore
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Editor / OS artifacts
+.vscode/
+*.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Readme (not needed in image)
+README.md

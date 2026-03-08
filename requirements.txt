@@ -5,4 +5,4 @@ pdfplumber
 python-docx
 pandas
 python-dotenv
-google-generativeai
+google-genai
