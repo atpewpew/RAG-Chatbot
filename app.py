@@ -19,32 +19,21 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    body {
-        background-color: #1e1e1e;
-        color: #ffffff;
+    body { background-color: #1e1e1e; color: #ffffff; }
+    .stApp { background-color: #1e1e1e; }
+    .stTextInput input { background-color: #3e3e3e; color: #ffffff; }
+    .stButton button { background-color: #4e4e4e; color: #ffffff; }
+    .chat-bubble-user {
+        background-color: #2e4a7a;
+        border-radius: 10px;
+        padding: 10px 14px;
+        margin: 6px 0;
     }
-    .stApp {
-        background-color: #1e1e1e;
-    }
-    .sidebar .sidebar-content {
+    .chat-bubble-bot {
         background-color: #2e2e2e;
-    }
-    .css-1d391kg p {
-        color: #ffffff;
-    }
-    .css-1cpxqw2 a {
-        color: #1e90ff;
-    }
-    .css-1cpxqw2 p {
-        color: #ffffff;
-    }
-    .stTextInput input {
-        background-color: #3e3e3e;
-        color: #ffffff;
-    }
-    .stButton button {
-        background-color: #4e4e4e;
-        color: #ffffff;
+        border-radius: 10px;
+        padding: 10px 14px;
+        margin: 6px 0;
     }
     </style>
     """,
@@ -53,7 +42,7 @@ st.markdown(
 
 # Streamlit App
 def main():
-    st.title("RAG Based  Document Q&A ChatBot")
+    st.title("RAG Document Q&A ChatBot")
 
     # Sidebar for file uploads
     st.sidebar.header("Upload Documents")
@@ -62,7 +51,7 @@ def main():
         type=["txt", "pdf", "docx", "xlsx"], 
         accept_multiple_files=True
     )
-    
+
     # Track already-indexed files to prevent duplicate indexing on Streamlit reruns
     if "processed_files" not in st.session_state:
         st.session_state.processed_files = set()
@@ -85,28 +74,50 @@ def main():
         else:
             st.sidebar.info("All uploaded files are already indexed.")
 
+    # Show indexed files list in sidebar
+    if st.session_state.get("processed_files"):
+        st.sidebar.markdown("**Indexed files:**")
+        for fname in sorted(st.session_state.processed_files):
+            st.sidebar.markdown(f"- {fname}")
+
     # Initialize chat history
     if "history" not in st.session_state:
         st.session_state.history = []
 
     # Chat interface
     st.header("Chat")
+
+    # Display full conversation history
+    for entry in st.session_state.history:
+        if "user" in entry:
+            st.markdown(
+                f'<div class="chat-bubble-user">🧑 <strong>You:</strong> {entry["user"]}</div>',
+                unsafe_allow_html=True,
+            )
+        elif "bot" in entry:
+            st.markdown(
+                f'<div class="chat-bubble-bot">🤖 <strong>Chatbot:</strong> {entry["bot"]}</div>',
+                unsafe_allow_html=True,
+            )
+
     user_query = st.text_input("Enter your query:", key="user_query")
-    if st.button("Send"):
-        if user_query.strip():
+    col1, col2 = st.columns([1, 6])
+    with col1:
+        send = st.button("Send")
+    with col2:
+        if st.button("Clear Chat"):
+            st.session_state.history = []
+            st.rerun()
+
+    if send:
+        if not st.session_state.processed_files:
+            st.warning("Please upload at least one document before querying.")
+        elif user_query.strip():
             retrieved_docs = retrieve_relevant_documents(user_query)
-            
-            # Add user query to chat history
             st.session_state.history.append({"user": user_query})
-            
-            # Generate response based on chat history and retrieved documents
             bot_response = generate_response(user_query, retrieved_docs, st.session_state.history)
-
-            # Add bot response to chat history
             st.session_state.history.append({"bot": bot_response})
-
-            # Display only the current bot response (not the whole history)
-            st.markdown(f"**Chatbot**: {bot_response}")
+            st.rerun()
 
 if __name__ == "__main__":
     # Ensure the temp directory exists
