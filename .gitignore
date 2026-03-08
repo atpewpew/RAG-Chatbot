@@ -1,4 +1,4 @@
-# Environment variables (contains API keys - never commit)
+# Environment variables
 .env
 
 # Uploaded document storage
