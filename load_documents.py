@@ -7,7 +7,11 @@ from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
 
-model = SentenceTransformer('all-MiniLM-L6-v2')
+@st.cache_resource
+def _load_model():
+    return SentenceTransformer('all-MiniLM-L6-v2')
+
+model = _load_model()
 
 # Initialize FAISS Index
 dimension = 384  # Embedding size for all-MiniLM-L6-v2

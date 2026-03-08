@@ -4,5 +4,6 @@ faiss-cpu
 pdfplumber
 python-docx
 pandas
+openpyxl
 python-dotenv
 google-genai
