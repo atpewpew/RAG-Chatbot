@@ -1,6 +1,11 @@
 import os
 import streamlit as st
-from load_documents import load_documents, add_documents_to_index, retrieve_relevant_documents
+from load_documents import (
+    load_documents,
+    add_documents_to_index,
+    retrieve_relevant_documents,
+    reset_documents_index,
+)
 from gemini import generate_response
 from utils import load_env
 
@@ -47,14 +52,20 @@ def main():
     # Sidebar for file uploads
     st.sidebar.header("Upload Documents")
     uploaded_files = st.sidebar.file_uploader(
-        "Upload .txt, .pdf, .docx, or .xlsx files", 
-        type=["txt", "pdf", "docx", "xlsx"], 
+        "Upload .txt, .pdf, .docx, .xlsx, .png, .jpg, or .jpeg files",
+        type=["txt", "pdf", "docx", "xlsx", "png", "jpg", "jpeg"],
         accept_multiple_files=True
     )
 
     # Track already-indexed files to prevent duplicate indexing on Streamlit reruns
     if "processed_files" not in st.session_state:
         st.session_state.processed_files = set()
+
+    if st.sidebar.button("Clear Indexed Documents"):
+        reset_documents_index()
+        st.session_state.processed_files = set()
+        st.sidebar.success("Indexed document store cleared. Upload new files to build a fresh index.")
+        st.rerun()
 
     if uploaded_files:
         os.makedirs("temp", exist_ok=True)

@@ -6,7 +6,9 @@ A **Retrieval-Augmented Generation (RAG)** chatbot built with Streamlit. Upload 
 
 ## Features
 
-- **Multi-format document support** — `.txt`, `.pdf`, `.docx`, `.xlsx`
+- **Multi-format document support** — `.txt`, `.pdf`, `.docx`, `.xlsx`, `.png`, `.jpg`, `.jpeg`
+- **OCR fallback for scanned PDFs** — pages with little or no extractable text are OCR'd automatically
+- **Image OCR support** — image files are ingested through OCR and added to the same RAG pipeline
 - **Smart chunking** — documents are split into 300-word overlapping chunks for better context coverage
 - **Semantic search** — FAISS vector index with `all-MiniLM-L6-v2` embeddings for fast, relevant retrieval
 - **Broad query detection** — summary/overview queries automatically retrieve more chunks for full-document coverage
@@ -25,6 +27,8 @@ A **Retrieval-Augmented Generation (RAG)** chatbot built with Streamlit. Upload 
 | Embeddings | `sentence-transformers` (`all-MiniLM-L6-v2`) |
 | Vector store | FAISS (`faiss-cpu`) |
 | PDF parsing | `pdfplumber` |
+| OCR | `pytesseract` + Tesseract OCR engine |
+| PDF page rendering for OCR fallback | `PyMuPDF` |
 | Docx parsing | `python-docx` |
 | Excel parsing | `pandas` |
 | Containerization | Docker |
@@ -39,6 +43,7 @@ A **Retrieval-Augmented Generation (RAG)** chatbot built with Streamlit. Upload 
 ├── gemini.py             # Google Gemini client and response generation
 ├── utils.py              # Environment variable loader
 ├── requirements.txt      # Python dependencies
+├── packages.txt          # Streamlit Cloud OS packages (Tesseract)
 ├── Dockerfile            # Container build definition
 ├── .dockerignore         # Files excluded from Docker build context
 ├── .gitignore            # Files excluded from git
@@ -65,6 +70,16 @@ Get a free API key at [https://aistudio.google.com/apikey](https://aistudio.goog
 ```bash
 pip install -r requirements.txt
 ```
+
+### 3.1 Install Tesseract OCR (required for OCR features)
+
+`pytesseract` requires the Tesseract OCR binary to be installed on your system.
+
+- Windows: install from the official UB Mannheim build or Tesseract installer, then ensure `tesseract` is in your `PATH`.
+- Linux (Debian/Ubuntu): `sudo apt-get install tesseract-ocr tesseract-ocr-eng`
+- macOS (Homebrew): `brew install tesseract`
+
+Troubleshooting (Windows): if `tesseract --version` works in Command Prompt but OCR still shows unavailable in Streamlit, restart the terminal/IDE and rerun the app. You can also set an explicit path with environment variable `TESSERACT_CMD` (example: `C:\Program Files\Tesseract-OCR\tesseract.exe`).
 
 ### 4. Run the app
 ```bash
@@ -93,12 +108,22 @@ Open **http://localhost:8501** in your browser.
 
 ---
 
+## Streamlit Cloud Notes
+
+- This repo includes `packages.txt` so Streamlit Cloud installs required OCR OS packages.
+- `packages.txt` currently installs: `tesseract-ocr`, `tesseract-ocr-eng`.
+- Keep `GEMINI_API_KEY` in Streamlit Cloud Secrets.
+- If Tesseract is unavailable at runtime, the app shows a warning and continues with text-based extraction.
+
+---
+
 ## Usage
 
-1. **Upload documents** using the sidebar — supported formats: `.txt`, `.pdf`, `.docx`, `.xlsx`
+1. **Upload documents** using the sidebar — supported formats: `.txt`, `.pdf`, `.docx`, `.xlsx`, `.png`, `.jpg`, `.jpeg`
 2. **Ask questions** in the chat input — the bot retrieves the most relevant chunks and generates a grounded answer
-3. For broad questions like *"summarize this document"* or *"what are the main points?"*, the retrieval automatically widens to cover more of the document
-4. Use **Clear Chat** to reset the conversation without re-uploading files
+3. For scanned/image-based PDFs, each page first uses normal text extraction, and OCR runs only on pages with little/no text
+4. For broad questions like *"summarize this document"* or *"what are the main points?"*, the retrieval automatically widens to cover more of the document
+5. Use **Clear Chat** to reset the conversation without re-uploading files
 
 ---
 

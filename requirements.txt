@@ -7,3 +7,6 @@ pandas
 openpyxl
 python-dotenv
 google-genai
+pytesseract
+Pillow
+PyMuPDF
